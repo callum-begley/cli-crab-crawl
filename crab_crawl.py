@@ -6,8 +6,7 @@ import random
 import tty
 import termios
 import select
-
-# test
+import json
 
 class CrabCrawl:
     def __init__(self):
@@ -25,9 +24,30 @@ class CrabCrawl:
         self.obstacle_speed = 1
         self.obstacle_frequency = 40
         self.frame_count = 0
+        self.high_score_file = 'high_score.json'
+        self.high_score = self.load_high_score()
         
     def clear_screen(self):
         os.system('clear' if os.name == 'posix' else 'cls')
+    
+    def load_high_score(self):
+        """Load high score from file"""
+        try:
+            if os.path.exists(self.high_score_file):
+                with open(self.high_score_file, 'r') as f:
+                    data = json.load(f)
+                    return data.get('high_score', 0)
+        except:
+            pass
+        return 0
+    
+    def save_high_score(self):
+        """Save high score to file"""
+        try:
+            with open(self.high_score_file, 'w') as f:
+                json.dump({'high_score': self.high_score}, f)
+        except:
+            pass
         
     def get_key_press(self):
         """Check if a key is pressed without blocking"""
@@ -120,7 +140,7 @@ class CrabCrawl:
     def render(self):
         self.clear_screen()
         
-        print(f"\n  CRAB CRAWL - Score: {self.score}  (Press SPACE to jump, Q to quit)\n")
+        print(f"\n  CRAB CRAWL - Score: {self.score} | High Score: {self.high_score}  (Press SPACE to jump, Q to quit)\n")
         
         for y in range(self.height):
             line = ""
@@ -198,11 +218,21 @@ class CrabCrawl:
                 time.sleep(0.05)
                 
             # Game over screen
+            # Check and update high score
+            is_new_high_score = False
+            if self.score > self.high_score:
+                self.high_score = self.score
+                self.save_high_score()
+                is_new_high_score = True
+            
             self.clear_screen()
             print("\n" * 5)
             print("  " + "=" * 40)
             print("  " + " " * 15 + "GAME OVER!")
             print("  " + f"      Final Score: {self.score}")
+            if is_new_high_score:
+                print("  " + " " * 10 + "🎉 NEW HIGH SCORE! 🎉")
+            print("  " + f"      High Score: {self.high_score}")
             print("  " + "=" * 40)
             print("\n")
             
