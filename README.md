@@ -18,7 +18,7 @@ Navigate a crab across the ocean floor while avoiding sea creatures. Jump over o
 
 1. Run the game:
    ```bash
-   python3 dino_run_cli.py
+   python3 crab_crawl.py
    ```
 
 2. Controls:
