@@ -140,6 +140,11 @@ class CrabCrawl:
     def render(self):
         self.clear_screen()
         
+        # ANSI color codes
+        CYAN_BG = '\033[46m'    # Cyan background (water)
+        YELLOW_BG = '\033[43m'  # Yellow background (sand)
+        RESET = '\033[0m'       # Reset colors
+        
         print(f"\n  CRAB CRAWL - Score: {self.score} | High Score: {self.high_score}  (Press SPACE to jump, Q to quit)\n")
         
         for y in range(self.height):
@@ -169,8 +174,14 @@ class CrabCrawl:
                     char = "-"
                 
                 line += char
-                
-            print("  " + line)
+            
+            # Print line with appropriate background color
+            if y == self.height - 1:
+                # Ground line gets yellow background (sand)
+                print(f"  {YELLOW_BG}{line}{RESET}")
+            else:
+                # Other lines get cyan background (water)
+                print(f"  {CYAN_BG}{line}{RESET}")
         
         print("\n  Press Q to quit anytime")
         
