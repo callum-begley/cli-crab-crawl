@@ -10,11 +10,11 @@ import select
 class CrabCrawl:
     def __init__(self):
         self.width = 60
-        self.height = 5
+        self.height = 7
         self.crab_pos = 5
-        self.crab_y = self.height - 2  # Crab sits above the ground
+        self.crab_y = self.height - 2 
         self.jump_height = 0
-        self.max_jump = 2  # Reduced jump height
+        self.max_jump = 2
         self.is_jumping = False
         self.jump_velocity = 0
         self.obstacles = []
@@ -36,14 +36,14 @@ class CrabCrawl:
     def jump(self):
         if not self.is_jumping:
             self.is_jumping = True
-            self.jump_velocity = 1.5  # Reduced jump velocity
+            self.jump_velocity = 1.5
             
     def update_crab(self):
         if self.is_jumping:
             self.crab_y -= self.jump_velocity
-            self.jump_velocity -= 0.2  # Faster gravity
+            self.jump_velocity -= 0.2
             
-            if self.crab_y >= self.height - 2:  # Return to position above ground
+            if self.crab_y >= self.height - 2:
                 self.crab_y = self.height - 2
                 self.is_jumping = False
                 self.jump_velocity = 0
@@ -51,7 +51,11 @@ class CrabCrawl:
     def add_obstacle(self):
         if self.frame_count % self.obstacle_frequency == 0:
             obstacle_type = random.choice(['octopus', 'squid', 'fish'])
-            y_pos = self.height - 2 if obstacle_type != 'fish' else self.height - 3
+            if obstacle_type != 'fish':
+                y_pos = self.height - 2
+            else:
+                # Fish can spawn at random heights from -3 to -6
+                y_pos = random.randint(self.height - 6, self.height - 3)
             self.obstacles.append({
                 'x': self.width - 1,
                 'y': y_pos,
@@ -67,23 +71,24 @@ class CrabCrawl:
         
     def check_collision(self):
         crab_x_range = range(self.crab_pos, self.crab_pos + 2)
-        crab_y = int(self.crab_y)
+        crab_y = self.crab_y  # Use float value for more accurate fish collision
         
         for obstacle in self.obstacles:
-            obs_x_range = range(int(obstacle['x']), int(obstacle['x']) + 2)
-            obs_y = int(obstacle['y'])
+            obs_y = obstacle['y']
             
             # Check for collision
-            x_overlap = any(x in obs_x_range for x in crab_x_range)
-            
-            # For fish (flying obstacles), check if crab collides when jumping
-            # For ground obstacles, check if crab is on the ground
             if obstacle['type'] == 'fish':
-                # Fish is at height-3, so check if crab is at height-3 or nearby
-                y_overlap = abs(crab_y - obs_y) <= 1
+                # Fish has extended collision range (one space in front and behind)
+                obs_x_range = range(int(obstacle['x']) - 1, int(obstacle['x']) + 3)
+                # Fish collision: check if crab passes through fish's vertical space
+                y_overlap = (crab_y <= obs_y + 0.5 and crab_y >= obs_y - 0.5)
             else:
-                # Ground obstacles need exact match
-                y_overlap = (crab_y == obs_y)
+                # Ground obstacles use normal collision range
+                obs_x_range = range(int(obstacle['x']), int(obstacle['x']) + 2)
+                # Ground obstacles need to be at same height
+                y_overlap = (int(crab_y) == int(obs_y))
+            
+            x_overlap = any(x in obs_x_range for x in crab_x_range)
             
             if x_overlap and y_overlap:
                 return True
@@ -95,14 +100,19 @@ class CrabCrawl:
         return None
         
     def draw_obstacle(self, x, y, obs_type):
-        if int(y) == self.height - 2:
-            if obs_type == 'octopus':
-                return '🐙'
-            elif obs_type == 'squid':
-                return '🦑'
-        elif int(y) == self.height - 3:
-            if obs_type == 'fish':
-                return '🐟'
+        if obs_type == 'fish':
+            # Check if this is the correct y position for this fish obstacle
+            # Fish can be at heights from -3 to -6
+            for obstacle in self.obstacles:
+                if int(obstacle['x']) == x and obstacle['type'] == 'fish' and int(obstacle['y']) == y:
+                    return '🐟'
+        else:
+            # Ground obstacles are always at height - 2
+            if int(y) == self.height - 2:
+                if obs_type == 'octopus':
+                    return '🐙'
+                elif obs_type == 'squid':
+                    return '🦑'
         return None
         
     def render(self):
@@ -192,12 +202,26 @@ class CrabCrawl:
             print("  " + " " * 15 + "GAME OVER!")
             print("  " + f"      Final Score: {self.score}")
             print("  " + "=" * 40)
-            print("\n" * 3)
+            print("\n")
             
         finally:
             # Restore terminal settings
             termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
 
+def main():
+    while True:
+        game = CrabCrawl()
+        game.run()
+        
+        # Ask if player wants to play again
+        print("  Play again? (Y/N): ", end='', flush=True)
+        response = input().strip().lower()
+        
+        if response not in ['y', 'yes']:
+            print("\n  Thanks for playing Crab Crawl! 🦀\n")
+            break
+        
+        print("\n")
+
 if __name__ == "__main__":
-    game = CrabCrawl()
-    game.run()
+    main()
