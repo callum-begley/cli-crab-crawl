@@ -171,7 +171,7 @@ class CrabCrawl:
                 
                 # Draw ground
                 if y == self.height - 1:
-                    char = "-"
+                    char = " "
                 
                 line += char
             
