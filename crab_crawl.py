@@ -10,8 +10,8 @@ import json
 
 class CrabCrawl:
     def __init__(self):
-        self.width = 60
-        self.height = 7
+        self.width = 80
+        self.height = 8
         self.crab_pos = 5
         self.crab_y = self.height - 2 
         self.jump_height = 0
@@ -148,32 +148,34 @@ class CrabCrawl:
         print(f"\n  CRAB CRAWL - Score: {self.score} | High Score: {self.high_score}  (Press SPACE to jump, Q to quit)\n")
         
         for y in range(self.height):
+            # Build a list of what's at each position
+            positions = [" "] * self.width
+            
+            # Draw crab
+            crab_char = self.draw_crab(y)
+            if crab_char and self.crab_pos < self.width:
+                positions[self.crab_pos] = crab_char
+            
+            # Draw obstacles
+            for obstacle in self.obstacles:
+                x = int(obstacle['x'])
+                if 0 <= x < self.width:
+                    obs_char = self.draw_obstacle(x, y, obstacle['type'])
+                    if obs_char and positions[x] == " ":
+                        positions[x] = obs_char
+            
+            # Build the line and account for emoji width
             line = ""
-            for x in range(self.width):
-                char = " "
-                
-                # Draw crab
-                if x == self.crab_pos:
-                    crab_char = self.draw_crab(y)
-                    if crab_char:
-                        line += crab_char
-                        continue
-                
-                # Draw obstacles
-                obstacle_drawn = False
-                for obstacle in self.obstacles:
-                    if int(obstacle['x']) == x:
-                        obs_char = self.draw_obstacle(x, y, obstacle['type'])
-                        if obs_char:
-                            char = obs_char
-                            obstacle_drawn = True
-                            break
-                
-                # Draw ground
-                if y == self.height - 1:
-                    char = " "
-                
+            visual_width = 0
+            for char in positions:
+                if visual_width >= self.width:
+                    break
                 line += char
+                # Emojis take 2 visual columns, spaces take 1
+                if char != " ":
+                    visual_width += 2
+                else:
+                    visual_width += 1
             
             # Print line with appropriate background color
             if y == self.height - 1:
